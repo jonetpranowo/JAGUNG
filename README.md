@@ -1,89 +1,103 @@
-Alternative HW using dplyr package
+Home Work 9
 ================
-Lilik Pranowo
-March 22, 2017
+Vincent, Gins, Lilik
+March 23, 2017
 
-Data manipulation
------------------
-
-Load "dplyr" and "tidyr" packages
+Data file
+---------
 
 ``` r
-library(dplyr) 
+ArrestMini <- read.csv("ArrestMini.csv")
 ```
 
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
+Create "DataCleaning.R" inside "Function" folder
+------------------------------------------------
 
 ``` r
-library(tidyr)
+AggregateByCase<-function(group,x){tapply(x,group,length)}
+lenunique<-function(x){length(unique(x))}
+UniqueAggregate<-function(group,x){tapply(x,group,lenunique)}
 ```
 
-Read data:
+Create "Plotting.R" inside "Graphs" folder
+------------------------------------------
 
 ``` r
-dat <- read.csv("ArrestMini.csv")
-dat<-na.omit(dat)
+PlotByTime<-function(time,count){ plot(count~time,
+                                  xlab="Time",ylab="Counts of Council Districts Having Crime",
+                                  main="The Spread of Crime",type="l",lwd=1)}
 ```
 
-Create new variables: "DATE" and "TIME" from variables "ARRESTTIME" then save it to "dat1" dataframe
+Create "main.R" using the functions in both DataCleaning.R and Plotting.R
+-------------------------------------------------------------------------
+
+Read ArrestMini.csv and save it to ArrestMini
 
 ``` r
-dat1 <- dat %>% 
-  separate(ARRESTTIME, c('DATE', 'TIME'), sep = 'T')
+ArrestMini <- read.csv("ArrestMini.csv")
 ```
 
-    ##         DATE     TIME COUNCIL_DISTRICT
-    ## 1 2016-09-12 22:53:00                1
-    ## 2 2016-12-26 20:36:00                7
-    ## 3 2016-12-27 15:19:00                4
-    ## 4 2017-01-04 20:09:00                1
-    ## 5 2017-01-07 22:28:00                6
-    ## 6 2016-09-18 13:55:00                6
+    ##            ARRESTTIME COUNCIL_DISTRICT
+    ## 1 2016-09-12T22:53:00                1
+    ## 2 2016-12-26T20:36:00                7
+    ## 3 2016-12-27T15:19:00                4
+    ## 4 2017-01-04T20:09:00                1
+    ## 5 2017-01-07T22:28:00                6
+    ## 6 2016-09-18T13:55:00                6
 
-Aggregate council districts that is affected by crime on the day --&gt; I save it as "Arrest\_Daily"
+Ommit NA
 
 ``` r
-Arrest_Daily <- dat1 %>%
-  group_by(DATE) %>%
-  summarize(CASES = n(), NUM_COUNCIL = n_distinct(COUNCIL_DISTRICT)) %>%
-  arrange(DATE) 
+dat<-na.omit(ArrestMini)
 ```
 
-    ## # A tibble: 212 × 3
-    ##          DATE CASES NUM_COUNCIL
-    ##         <chr> <int>       <int>
-    ## 1  2014-11-16     3           1
-    ## 2  2015-05-29     1           1
-    ## 3  2015-11-04     2           1
-    ## 4  2016-02-12     1           1
-    ## 5  2016-02-17     1           1
-    ## 6  2016-03-03     1           1
-    ## 7  2016-04-04     1           1
-    ## 8  2016-04-08     1           1
-    ## 9  2016-04-10     1           1
-    ## 10 2016-04-12     2           1
-    ## # ... with 202 more rows
-
-Plots
------
-
-Plot the number of council districts that reports at least one arrest for each day:
+Retrieve the "date character" from "ARRESTTIME" character string that contains date dan time
 
 ``` r
-rdate <- as.Date(Arrest_Daily$DATE, "%Y-%m-%d")
+dat$ARRESTTIME<-substr(as.character(dat$ARRESTTIME), 1, 10)
 ```
+
+result:
+
+    ##  [1] "2016-09-12" "2016-12-26" "2016-12-27" "2017-01-04" "2017-01-07"
+    ##  [6] "2016-09-18" "2016-09-19" "2016-09-19" "2016-11-08" "2016-10-08"
+
+List Council Districts based on each ARRESTTIME
 
 ``` r
-plot(Arrest_Daily$NUM_COUNCIL~rdate, type="l", col="red", xlab="Time",ylab="Numb of Council Districts Having Crime", main="The Spread of Crime", lwd=1)
+CrimeCount<-as.matrix(AggregateByCase(dat$ARRESTTIME,dat$COUNCIL_DISTRICT))
 ```
 
-![](Pertemuan_1_files/figure-markdown_github/unnamed-chunk-8-1.png)
+result (display 10 list):
+
+    ##  [1] 3 1 2 1 1 1 1 1 1 2
+
+Count the aggregate Council Districts on each Arrest Time day
+
+``` r
+CouncilCount<-as.matrix(UniqueAggregate(dat$ARRESTTIME,dat$COUNCIL_DISTRICT))
+```
+
+result (display only 10):
+
+    ## 2014-11-16 2015-05-29 2015-11-04 2016-02-12 2016-02-17 2016-03-03 
+    ##          1          1          1          1          1          1 
+    ## 2016-04-04 2016-04-08 2016-04-10 2016-04-12 
+    ##          1          1          1          1
+
+Plotting
+--------
+
+Convert variable ARRESTTIME from character to date
+
+``` r
+time<-as.Date(sort(unique(dat$ARRESTTIME)),"%Y-%m-%d")
+```
+
+Plot time and aggregate Council Districts on each Arrest Time day
+
+``` r
+PlotByTime(time,CouncilCount[,1])
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-14-1.png)
