@@ -1,32 +1,100 @@
-HW 9
-================
-Vincent, Gins, Lilik
-March 23, 2017
+---
+title: "Home Work-9"
+author: "Vincent, Gins, Lilik"
+date: "March 20, 2017"
+output: github_document
+---
 
-R Markdown
-----------
+---
+title: "Home Work 9"
+author: "Vincent, Gins, Lilik"
+date: "March 23, 2017"
+output: github_document
+---
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-``` r
-summary(cars)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
-    ##      speed           dist       
-    ##  Min.   : 4.0   Min.   :  2.00  
-    ##  1st Qu.:12.0   1st Qu.: 26.00  
-    ##  Median :15.0   Median : 36.00  
-    ##  Mean   :15.4   Mean   : 42.98  
-    ##  3rd Qu.:19.0   3rd Qu.: 56.00  
-    ##  Max.   :25.0   Max.   :120.00
+## Data file 
+Read file "ArrestMini.csv" and save it to "ArrestMini"
 
-Including Plots
----------------
+```{r}
+ArrestMini <- read.csv("ArrestMini.csv")
+```
 
-You can also embed plots, for example:
+## "DataCleaning.R" inside the "Function" folder 
+```{r}
+AggregateByCase<-function(group,x){tapply(x,group,length)}
+lenunique<-function(x){length(unique(x))}
+UniqueAggregate<-function(group,x){tapply(x,group,lenunique)}
+```
 
-![](hw9_files/figure-markdown_github/pressure-1.png)
+## "Plotting.R" inside "Graphs" folder
+```{r}
+PlotByTime<-function(time,count){ plot(count~time,
+                                  xlab="Time",ylab="Counts of Council Districts Having Crime",
+                                  main="The Spread of Crime",type="l",lwd=1)}
+```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## "main.R" that contains the functions in both DataCleaning.R and Plotting.R
+Read ArrestMini.csv and save it to ArrestMini  
+```{r}
+ArrestMini <- read.csv("ArrestMini.csv")
+```
+
+```{r echo=FALSE}
+head(ArrestMini)
+```
+
+Ommit NA
+```{r}
+dat<-na.omit(ArrestMini)
+```
+
+Retrieve the "date character" from "ARRESTTIME" character string that contains date dan time
+```{r}
+dat$ARRESTTIME<-substr(as.character(dat$ARRESTTIME), 1, 10)
+```
+result (display only 20 list):
+```{r echo=FALSE}
+dat$ARRESTTIME [1:20]
+```
+
+Count the aggregate Council Districts on each Arrest Time day
+```{r}
+CrimeCount<-as.matrix(AggregateByCase(dat$ARRESTTIME,dat$COUNCIL_DISTRICT))
+```
+result (display 20 list):
+```{r echo=FALSE}
+CrimeCount [1:20, 1]
+```
+
+Count the aggregate unique Council Districts on each Arrest Time day
+```{r}
+CouncilCount<-as.matrix(UniqueAggregate(dat$ARRESTTIME,dat$COUNCIL_DISTRICT))
+```
+result:
+```{r echo=FALSE}
+CouncilCount
+```
+
+## A "Time-Series" Graph
+Convert variable ARRESTTIME from character to date
+```{r}
+time<-as.Date(sort(unique(dat$ARRESTTIME)),"%Y-%m-%d")
+```
+
+Plot time and aggregate Council Districts on each Arrest Time day
+```{r}
+PlotByTime(time,CouncilCount[,1])
+```
+
+#Thank You....
+
+
+
+
+
+
+
